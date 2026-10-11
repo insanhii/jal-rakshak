@@ -48,3 +48,26 @@ JalRakshak fulfills the Bharat Builds Tour criteria by leveraging AWS serverless
 - **0:30 - 1:30 (Live Demo):** Walk through the interactive map, show live severity badges, submit a simulated flood report, and run the Safe Route Finder.
 - **1:30 - 2:30 (AWS Tech Stack):** Explain the SAM template, Lambda handler, S3 photo upload pipeline, DynamoDB indexing, and Bedrock AI Copilot.
 - **2:30 - 3:00 (Impact & Wrap Up):** "JalRakshak saves lives, protects vehicles, and gives cities real-time flood resilience. Thank you!"
+
+## Run locally (AWS emulated with LocalStack)
+
+Requirements: Docker Desktop, Python 3.10+
+
+1. Start LocalStack:
+   docker run -d --name localstack-main -p 4566:4566 localstack/localstack:3.8.1
+2. Install dependencies:
+   python -m pip install boto3 flask flask-cors
+3. Create DynamoDB table, S3 bucket, SNS topic and seed data:
+   python setup_localstack.py
+4. Start the API (runs lambda_handler.py behind Flask, stands in for API Gateway):
+   python local_server.py
+5. Serve the frontend:
+   python -m http.server 8080
+6. Open http://localhost:8080
+
+The same `lambda_handler.py` deploys to real AWS with `sam deploy` using `template.yaml`.
+
+## What is real vs simulated
+
+- Real (on LocalStack): DynamoDB storage, SNS alert publish, Lambda handler logic
+- Simulated: AI Flood Copilot replies and the rainfall/radar card (sample data). Amazon Bedrock integration is planned.
