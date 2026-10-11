@@ -1,4 +1,4 @@
-# JalRakshak: Hyperlocal Flood & Waterlogging Sentinel
+﻿# JalRakshak: Hyperlocal Flood & Waterlogging Sentinel
 ### Bharat Builds Tour (Track 02: Heat and Water)
 **Team:** TURIYA (Ansh Devkate, Om Kodilkar)
 
@@ -16,7 +16,7 @@ Every monsoon season across Indian metros, unpredictable flash waterlogging para
 **JalRakshak** is a community-driven and sensor-backed flood early warning system that delivers:
 1. **Live Waterlog Sentinel Map:** Shows exact water depth and danger zones with animated pulse indicators.
 2. **AI Safe Navigation Assistant:** Calculates alternative routes specifically bypassing flooded underpasses and water traps.
-3. **AWS Bedrock Flood Copilot:** Natural language assistant answering questions regarding safe roads, emergency rescue contacts, and civic actions.
+3. **AI Flood Copilot (demo, Bedrock planned):** Simulated natural language assistant answering questions regarding safe roads, emergency rescue contacts, and civic actions.
 4. **Instant Crowdsource & CV verification:** Citizens submit real-time reports with photo geotags.
 
 ---
@@ -27,7 +27,7 @@ JalRakshak fulfills the Bharat Builds Tour criteria by leveraging AWS serverless
 - **AWS Lambda & API Gateway:** Serverless ingestion microservice handling incoming incident reports without infrastructure overhead.
 - **Amazon DynamoDB:** Sub-millisecond queries for geotagged flood markers (`JalRakshakIncidents` table).
 - **Amazon S3:** High-durability cloud storage for user-submitted street flood images.
-- **Amazon Rekognition / Bedrock (AI):** Multi-modal image analysis to gauge water depth against tire rims + automated LLM flood advisory.
+- **Amazon Rekognition / Bedrock (AI, planned):** Multi-modal image analysis to gauge water depth against tire rims + automated LLM flood advisory.
 - **Amazon SNS / SQS:** Pub/Sub alert pipeline that triggers automated SOS dispatches to municipal ward authorities.
 - **AWS SAM (Serverless Application Model):** Infrastructure as Code (`template.yaml`) for 1-click cloud deployment.
 
@@ -46,7 +46,7 @@ JalRakshak fulfills the Bharat Builds Tour criteria by leveraging AWS serverless
 ## 5. Demo Video 3-Minute Script (Ready for Recording)
 - **0:00 - 0:30 (Hook & Problem):** "Every monsoon, hundreds of commuters get trapped in flooded underpasses, and municipal teams react too late."
 - **0:30 - 1:30 (Live Demo):** Walk through the interactive map, show live severity badges, submit a simulated flood report, and run the Safe Route Finder.
-- **1:30 - 2:30 (AWS Tech Stack):** Explain the SAM template, Lambda handler, S3 photo upload pipeline, DynamoDB indexing, and Bedrock AI Copilot.
+- **1:30 - 2:30 (AWS Tech Stack):** Explain the SAM template, Lambda handler, S3 photo upload pipeline (planned), DynamoDB indexing, and the AI Copilot demo (Bedrock integration planned).
 - **2:30 - 3:00 (Impact & Wrap Up):** "JalRakshak saves lives, protects vehicles, and gives cities real-time flood resilience. Thank you!"
 
 ## Run locally (AWS emulated with LocalStack)
