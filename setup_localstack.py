@@ -40,8 +40,11 @@ print("Topic:", topic["TopicArn"])
 
 # Seed data
 items = [
-    ("INC-001", "Minto Bridge Underpass", "3.8 ft", "Severe", "Pumps Deployed", "28.6366", "77.2255"),
-    ("INC-002", "Pul Prahladpur Underpass", "3.2 ft", "Severe", "Road Diverted", "28.5085", "77.2917"),
+    ("INC-001", "Minto Bridge Underpass", "3.8 ft", "Severe", "High-Capacity Pump Dispatched", "28.6366", "77.2255"),
+    ("INC-002", "Pul Prahladpur Underpass", "3.2 ft", "Severe", "Barricaded by Police", "28.5085", "77.2917"),
+    ("INC-003", "Zakhira Flyover Low Section", "1.8 ft", "Moderate", "Drain Clearance Crew Active", "28.6672", "77.1593"),
+    ("INC-004", "ITO Ring Road Junction", "2.1 ft", "Moderate", "Suction Tanker On Site", "28.6289", "77.2494"),
+    ("INC-005", "DTU Main Gate, Bawana Road", "0.6 ft", "Caution", "Monitored Clean", "28.7499", "77.1172"),
 ]
 for i, n, d, s, st, la, ln in items:
     dynamo.put_item(TableName="JalRakshakIncidents", Item={
