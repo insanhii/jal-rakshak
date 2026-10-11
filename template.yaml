@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: JalRakshak - Serverless Waterlogging & Flood Early Warning Architecture (Bharat Builds Tour)
+
+Globals:
+  Function:
+    Timeout: 10
+    Runtime: python3.11
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref WaterlogTable
+        ALERTS_TOPIC_ARN: !Ref FloodAlertsTopic
+
+Resources:
+  # 1. DynamoDB Table for Storing Real-time Hotspots
+  WaterlogTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: JalRakshakIncidents
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: incidentId
+          AttributeType: S
+        - AttributeName: severity
+          AttributeType: S
+      KeySchema:
+        - AttributeName: incidentId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: SeverityIndex
+          KeySchema:
+            - AttributeName: severity
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  # 2. S3 Bucket for Crowdsourced Geo-Tagged Flood Photos
+  FloodImageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub jalrakshak-evidence-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+
+  # 3. SNS Topic for Civic and Commuter Emergency Broadcasts
+  FloodAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: JalRakshak-SevereWaterlog-Alerts
+
+  # 4. Lambda Function: Ingest Incident & Call AI Vision / Bedrock Analysis
+  IngestWaterlogFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_handler.handler
+      CodeUri: .
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref WaterlogTable
+        - SNSPublishMessagePolicy:
+            TopicName: JalRakshak-SevereWaterlog-Alerts
+      Events:
+        PostReportApi:
+          Type: Api
+          Properties:
+            Path: /report
+            Method: post
+        GetHotspotsApi:
+          Type: Api
+          Properties:
+            Path: /hotspots
+            Method: get
+
+Outputs:
+  ApiEndpoint:
+    Description: "API Gateway endpoint URL for JalRakshak backend"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
