@@ -205,6 +205,9 @@
       border-radius: 6px;
       background: #0b1120;
     }
+    .leaflet-tile-pane {
+      filter: brightness(0.85) contrast(1.15) invert(0.92) hue-rotate(190deg);
+    }
 
     /* Right Panel (Actions & AI) */
     .side-stack {
@@ -647,10 +650,10 @@
     function initMap() {
       map = L.map('map').setView([28.6448, 77.2167], 11);
 
-      // Clean, muted carto tiles (modern clean look)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      // Free, high-reliability OpenStreetMap tiles with no API key watermarks
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        attribution: '&copy; CartoDB &copy; OpenStreetMap'
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
 
       drawMarkers();
