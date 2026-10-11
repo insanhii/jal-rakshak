@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -630,33 +630,74 @@
   <!-- Leaflet Scripts & Logic -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const hotspots = [
+    const API = 'http://localhost:5000';
+
+    const fallbackHotspots = [
       { id: 1, name: "Minto Bridge Underpass", lat: 28.6366, lng: 77.2255, depth: "3.8 ft", sev: "Severe", transit: "Blocked (Buses stalled)", status: "High-Capacity Pump Dispatched" },
       { id: 2, name: "Pul Prahladpur Underpass", lat: 28.5085, lng: 77.2917, depth: "3.2 ft", sev: "Severe", transit: "Traffic Diverted", status: "Barricaded by Police" },
       { id: 3, name: "Zakhira Flyover Low Section", lat: 28.6672, lng: 77.1593, depth: "1.8 ft", sev: "Moderate", transit: "Two-wheeler risk", status: "Drain Clearance Crew Active" },
-      { id: 4, name: "ITO Ring Road Junction", lat: 28.6289, latLng: 77.2494, depth: "2.1 ft", sev: "Moderate", transit: "Heavy Jam", status: "Suction Tanker On Site" },
+      { id: 4, name: "ITO Ring Road Junction", lat: 28.6289, lng: 77.2494, depth: "2.1 ft", sev: "Moderate", transit: "Heavy Jam", status: "Suction Tanker On Site" },
       { id: 5, name: "DTU Main Gate, Bawana Road", lat: 28.7499, lng: 77.1172, depth: "0.6 ft", sev: "Caution", transit: "Passable with caution", status: "Monitored Clean" }
     ];
 
+    let hotspots = [...fallbackHotspots];
     let map;
     let markers = [];
+
+    function transitFor(sev) {
+      if (sev === 'Severe') return 'Road Inundated';
+      if (sev === 'Moderate') return 'Slow Traffic';
+      return 'Passable with caution';
+    }
+
+    function fromApi(item) {
+      return {
+        id: item.incidentId,
+        name: item.name,
+        lat: item.lat,
+        lng: item.lng,
+        depth: item.depth,
+        sev: item.severity,
+        transit: item.transit || transitFor(item.severity),
+        status: item.status
+      };
+    }
+
+    async function loadHotspots() {
+      try {
+        const res = await fetch(API + '/hotspots');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const json = await res.json();
+        if (json.data && json.data.length) {
+          hotspots = json.data.map(fromApi);
+          setSource(true);
+        }
+      } catch (err) {
+        console.warn('Backend unreachable, using fallback data:', err);
+        hotspots = [...fallbackHotspots];
+        setSource(false);
+      }
+      drawMarkers();
+      renderTable();
+    }
+
+    function setSource(live) {
+      const el = document.getElementById('count-spots');
+      if (el) el.title = live ? 'Live from AWS DynamoDB (LocalStack)' : 'Offline fallback data';
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
       lucide.createIcons();
       initMap();
-      renderTable();
+      loadHotspots();
     });
 
     function initMap() {
       map = L.map('map').setView([28.6448, 77.2167], 11);
-
-      // Free, high-reliability OpenStreetMap tiles with no API key watermarks
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
-
-      drawMarkers();
     }
 
     function drawMarkers() {
@@ -665,14 +706,9 @@
 
       hotspots.forEach(item => {
         let color = item.sev === 'Severe' ? '#ef4444' : (item.sev === 'Moderate' ? '#f59e0b' : '#10b981');
-        
-        let marker = L.circleMarker([item.lat, item.lng || 77.22], {
-          radius: 9,
-          fillColor: color,
-          color: '#ffffff',
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.9
+        let marker = L.circleMarker([item.lat, item.lng], {
+          radius: 9, fillColor: color, color: '#ffffff',
+          weight: 2, opacity: 1, fillOpacity: 0.9
         }).addTo(map);
 
         marker.bindPopup(`
@@ -683,7 +719,6 @@
             Status: ${item.status}
           </div>
         `);
-
         markers.push(marker);
       });
     }
@@ -713,7 +748,6 @@
       const alertBox = document.getElementById('safe-alert');
       alertBox.style.display = 'block';
 
-      // Draw safe polyline bypassing flooded spots
       const routeCoords = [
         [28.7180, 77.1100],
         [28.7300, 77.1140],
@@ -721,9 +755,7 @@
       ];
 
       const safePath = L.polyline(routeCoords, {
-        color: '#10b981',
-        weight: 4,
-        dashArray: '8, 8'
+        color: '#10b981', weight: 4, dashArray: '8, 8'
       }).addTo(map);
 
       map.fitBounds(safePath.getBounds());
@@ -736,14 +768,12 @@
 
       const chatStream = document.getElementById('chat-stream');
 
-      // User Bubble
       const userDiv = document.createElement('div');
       userDiv.className = 'msg-user';
       userDiv.innerText = text;
       chatStream.appendChild(userDiv);
       input.value = '';
 
-      // AI Simulated Reply (Bedrock)
       setTimeout(() => {
         let reply = "AWS Bedrock analysis: Minto Bridge has 3.8 ft water depth. Please take Barakhamba Road or Outer Ring Road to avoid waterlogging.";
         if (text.toLowerCase().includes('help') || text.toLowerCase().includes('contact')) {
@@ -768,28 +798,43 @@
       document.getElementById('report-modal').style.display = 'none';
     }
 
-    function submitReport(e) {
+    async function submitReport(e) {
       e.preventDefault();
+      const form = e.target;
       const name = document.getElementById('rep-name').value;
       const depth = document.getElementById('rep-level').value.split(' ')[0];
       const sev = document.getElementById('rep-sev').value;
 
-      hotspots.unshift({
-        id: Date.now(),
-        name: name,
-        lat: 28.6200 + (Math.random() * 0.1),
-        lng: 77.2000 + (Math.random() * 0.1),
+      const payload = {
+        location: name,
         depth: depth,
-        sev: sev,
-        transit: sev === 'Severe' ? 'Road Inundated' : 'Slow Traffic',
-        status: 'Processed by AWS Lambda & SNS'
-      });
+        severity: sev,
+        lat: 28.6200 + (Math.random() * 0.1),
+        lng: 77.2000 + (Math.random() * 0.1)
+      };
 
-      drawMarkers();
-      renderTable();
-      closeModal();
-      e.target.reset();
-      alert('Report submitted! Stored in DynamoDB and updated on live sentinel map.');
+      try {
+        const res = await fetch(API + '/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const r = await res.json();
+
+        closeModal();
+        form.reset();
+        await loadHotspots();
+        alert(
+          'Report saved to DynamoDB!\n' +
+          'Incident ID: ' + r.incidentId + '\n' +
+          'Risk score: ' + r.riskScore + '\n' +
+          'Action: ' + r.actionRecommended + '\n' +
+          'SNS alert sent: ' + (r.snsNotificationDispatched ? 'Yes' : 'No')
+        );
+      } catch (err) {
+        alert('Could not reach the backend (' + err.message + '). Is local_server.py running?');
+      }
     }
   </script>
 </body>
