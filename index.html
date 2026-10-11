@@ -802,7 +802,7 @@
       e.preventDefault();
       const form = e.target;
       const name = document.getElementById('rep-name').value;
-      const depth = document.getElementById('rep-level').value.split(' ')[0];
+      const depth = document.getElementById('rep-level').value.split(' ').slice(0, 2).join(' ');
       const sev = document.getElementById('rep-sev').value;
 
       const payload = {
